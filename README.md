@@ -4,6 +4,10 @@ A full-stack web application that turns source text into interactive visual logi
 Users extract phrases as bubbles, connect them with arrows, insert junction dots,
 and save their maps as named projects.
 
+Project Live Demo: https://logic-bubble.lymis.uk/
+
+Developers: Xuehua-neve and I.
+
 ---
 
 ## Tech Stack
