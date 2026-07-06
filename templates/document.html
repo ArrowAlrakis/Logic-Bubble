@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Documentation — Logic Bubble App{% endblock %}
+
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-2">Documentation</h1>
+<p class="text-lb-text-muted text-sm mb-10">
+  A guide to every feature in Logic Bubble App.
+</p>
+
+{# ── Section helper ─────────────────────────────────────────── #}
+{% macro section(title) %}
+<div class="mb-8">
+  <h2 class="text-lg font-bold text-lb-text mb-4
+             border-b border-lb-border pb-2">{{ title }}</h2>
+  {{ caller() }}
+</div>
+{% endmacro %}
+
+{# ── Getting Started ─────────────────────────────────────────── #}
+<div class="mb-8">
+  <h2 class="text-lg font-bold mb-4 border-b border-lb-border pb-2">Getting Started</h2>
+  <ol class="space-y-3 text-sm text-lb-text-muted list-decimal list-inside">
+    <li><span class="text-lb-text font-semibold">Register</span> an account or log in.</li>
+    <li>Click <span class="text-lb-accent font-semibold">+ New Project</span> from the Dashboard, or open the Editor directly.</li>
+    <li>Paste or type text into the <span class="text-lb-text font-semibold">Input Text</span> panel and click <em>Submit Text</em>.</li>
+    <li>In the <span class="text-lb-text font-semibold">Source Text</span> panel, select any phrase and press <kbd class="bg-lb-surface2 border border-lb-border rounded px-1.5 py-0.5 text-xs">Enter</kbd> (or click the floating <em>Extract Bubble</em> button) to create a bubble.</li>
+    <li>Connect bubbles, insert dot nodes, and build your logic map.</li>
+    <li>Save your project with <kbd class="bg-lb-surface2 border border-lb-border rounded px-1.5 py-0.5 text-xs">Ctrl+S</kbd> or the Save button.</li>
+  </ol>
+</div>
+
+{# ── Bubbles ─────────────────────────────────────────────────── #}
+<div class="mb-8">
+  <h2 class="text-lg font-bold mb-4 border-b border-lb-border pb-2">Bubbles</h2>
+  <div class="space-y-2 text-sm text-lb-text-muted">
+    <p><span class="text-lb-text font-semibold">Create</span> — Select text in the Source panel and press Enter, or use the floating Extract button.</p>
+    <p><span class="text-lb-text font-semibold">Move</span> — Drag a bubble freely. Bubbles snap to aligned positions within 8 px of another bubble.</p>
+    <p><span class="text-lb-text font-semibold">Edit</span> — Double-click or press <kbd class="bg-lb-surface2 border border-lb-border rounded px-1.5 py-0.5 text-xs">F2</kbd> to edit text inline.</p>
+    <p><span class="text-lb-text font-semibold">Merge</span> — Drag one bubble onto another to combine their text.</p>
+    <p><span class="text-lb-text font-semibold">Fill Color</span> — Select a bubble, press <kbd class="bg-lb-surface2 border border-lb-border rounded px-1.5 py-0.5 text-xs">C</kbd> or right-click → Set Color.</p>
+    <p><span class="text-lb-text font-semibold">Delete</span> — Select, then press <kbd class="bg-lb-surface2 border border-lb-border rounded px-1.5 py-0.5 text-xs">Del</kbd>, or right-click → Delete.</p>
+  </div>
+</div>
+
+{# ── Connections ─────────────────────────────────────────────── #}
+<div class="mb-8">
+  <h2 class="text-lg font-bold mb-4 border-b border-lb-border pb-2">Connections</h2>
+  <div class="space-y-2 text-sm text-lb-text-muted">
+    <p><span class="text-lb-text font-semibold">Connect mode</span> — Press <kbd class="bg-lb-surface2 border border-lb-border rounded px-1.5 py-0.5 text-xs">S</kbd> to enter Connect mode (topbar shows CONNECT). Click a source node, then a target node to draw an arrow.</p>
+    <p><span class="text-lb-text font-semibold">Straight / Curve</span> — Select a line and press <kbd class="bg-lb-surface2 border border-lb-border rounded px-1.5 py-0.5 text-xs">Shift+S</kbd> to toggle. Or right-click a line → Toggle Straight / Curve.</p>
+    <p><span class="text-lb-text font-semibold">Reroute</span> — Drag the handle at the arrow tip (or tail) to change where the connection ends (or starts).</p>
+    <p><span class="text-lb-text font-semibold">Remove by drag</span> — Drag a handle to empty canvas space to delete the connection (undoable).</p>
+  </div>
+</div>
+
+{# ── Dot Nodes ───────────────────────────────────────────────── #}
+<div class="mb-8">
+  <h2 class="text-lg font-bold mb-4 border-b border-lb-border pb-2">Dot Nodes</h2>
+  <div class="space-y-2 text-sm text-lb-text-muted">
+    <p><span class="text-lb-text font-semibold">Insert</span> — Press <kbd class="bg-lb-surface2 border border-lb-border rounded px-1.5 py-0.5 text-xs">.</kbd> or use Edit → Add Dot Node to place a junction dot.</p>
+    <p>When a <span class="text-lb-text font-semibold">line is selected</span>, pressing <kbd class="bg-lb-surface2 border border-lb-border rounded px-1.5 py-0.5 text-xs">.</kbd> splits it at the midpoint.</p>
+    <p>When a <span class="text-lb-text font-semibold">bubble is selected</span>, pressing <kbd class="bg-lb-surface2 border border-lb-border rounded px-1.5 py-0.5 text-xs">.</kbd> adds a dot below it with a line already drawn.</p>
+  </div>
+</div>
+
+{# ── Canvas Controls ─────────────────────────────────────────── #}
+<div class="mb-8">
+  <h2 class="text-lg font-bold mb-4 border-b border-lb-border pb-2">Canvas Controls</h2>
+  <div class="space-y-2 text-sm text-lb-text-muted">
+    <p><span class="text-lb-text font-semibold">Zoom</span> — Scroll the mouse wheel over the canvas (0.2× – 3×).</p>
+    <p><span class="text-lb-text font-semibold">Pan</span> — Hold <kbd class="bg-lb-surface2 border border-lb-border rounded px-1.5 py-0.5 text-xs">Space</kbd> and drag, or use the middle mouse button.</p>
+    <p><span class="text-lb-text font-semibold">Snap align</span> — While dragging a bubble, it snaps to the X or Y axis of a nearby bubble (within 8 px). Dashed guide lines appear.</p>
+  </div>
+</div>
+
+{# ── Keyboard Shortcuts ──────────────────────────────────────── #}
+<div class="mb-8">
+  <h2 class="text-lg font-bold mb-4 border-b border-lb-border pb-2">Keyboard Shortcuts</h2>
+  <div class="bg-lb-surface border border-lb-border rounded-xl overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-lb-surface2 text-lb-text-muted text-xs uppercase tracking-wider">
+        <tr>
+          <th class="px-4 py-3 text-left font-semibold">Key</th>
+          <th class="px-4 py-3 text-left font-semibold">Action</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-lb-border">
+        {% set shortcuts = [
+          ('S',            'Toggle Connect / Select mode'),
+          ('C',            'Open Fill Color panel (bubble selected)'),
+          ('Shift+S',      'Toggle straight / curve line'),
+          ('.',            'Insert dot node'),
+          ('Del / Backspace', 'Delete selected node'),
+          ('F2',           'Edit selected bubble'),
+          ('Enter',        'Extract selected text / Edit selected bubble'),
+          ('Ctrl+S',       'Save project'),
+          ('Ctrl+Z',       'Undo'),
+          ('Esc',          'Cancel / close panels'),
+          ('?',            'Toggle keyboard shortcut help'),
+          ('Wheel',        'Zoom canvas in / out'),
+          ('Space + drag', 'Pan canvas'),
+        ] %}
+        {% for key, action in shortcuts %}
+        <tr class="hover:bg-lb-surface2 transition">
+          <td class="px-4 py-2.5">
+            <kbd class="bg-lb-surface2 border border-lb-border rounded px-2 py-0.5
+                        text-xs font-mono text-lb-accent2">{{ key }}</kbd>
+          </td>
+          <td class="px-4 py-2.5 text-lb-text-muted">{{ action }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{# ── Project Management ──────────────────────────────────────── #}
+<div class="mb-8">
+  <h2 class="text-lg font-bold mb-4 border-b border-lb-border pb-2">Project Management</h2>
+  <div class="space-y-2 text-sm text-lb-text-muted">
+    <p><span class="text-lb-text font-semibold">Save</span> — Name your project in the topbar and press Ctrl+S or the Save button. Subsequent saves update the same record (no duplicates).</p>
+    <p><span class="text-lb-text font-semibold">Export PNG</span> — File → Export PNG captures the entire canvas as a high-resolution image.</p>
+    <p><span class="text-lb-text font-semibold">Export JSON</span> — File → Export JSON downloads the full project (text + graph) as a JSON file.</p>
+    <p><span class="text-lb-text font-semibold">Import JSON</span> — File → Import JSON loads a previously exported JSON file as a new project.</p>
+    <p><span class="text-lb-text font-semibold">Delete</span> — On the Dashboard, click the × button next to any project to remove it.</p>
+  </div>
+</div>
+
+{% endblock %}

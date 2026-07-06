@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor — Logic Bubble App</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+  <!-- ── Topbar (v4.1.1: logo nav dropdown, gear preferences dropdown) ── -->
+  <div id="topbar" role="toolbar" aria-label="Editor toolbar">
+
+    <!-- Logo: click to open nav dropdown -->
+    <div class="tb-dropdown-wrap">
+      <button class="tb-logo-btn" id="logo-btn" aria-haspopup="true" aria-label="Navigation menu">
+        Logic<span>.</span>Bubble
+      </button>
+      <div class="tb-dropdown" id="logo-dropdown" role="menu">
+        <a class="tb-dropdown-item" href="/"          role="menuitem">Home</a>
+        <a class="tb-dropdown-item" href="/dashboard" role="menuitem">Dashboard</a>
+        <a class="tb-dropdown-item" href="/editor"    role="menuitem">Editor</a>
+        <a class="tb-dropdown-item" href="/document"  role="menuitem">Document</a>
+        <a class="tb-dropdown-item" href="/about"     role="menuitem">About</a>
+      </div>
+    </div>
+
+    <!-- Mode indicator — tight to logo -->
+    <div id="mode-indicator" title="Press S to toggle Connect / Select mode" aria-live="polite">SELECT</div>
+
+    <!-- Flex spacer: push right-side items to the right edge -->
+    <div class="tb-spacer"></div>
+
+    <!-- Project title -->
+    <input type="text" id="project-title"
+           placeholder="Untitled Project"
+           aria-label="Project title"
+           class="tb-title-input">
+
+    <!-- Save -->
+    <button class="tb-btn" id="save-project-btn"
+            title="Save Project (Ctrl+S)" aria-label="Save project">
+      Save
+    </button>
+
+    <div class="tb-sep" aria-hidden="true"></div>
+
+    <!-- File dropdown -->
+    <div class="tb-dropdown-wrap">
+      <button class="tb-btn" id="file-btn" aria-haspopup="true" aria-label="File menu">File ▾</button>
+      <div class="tb-dropdown" id="file-dropdown" role="menu">
+        <div class="tb-dropdown-item" id="export-png-btn"  role="menuitem">Export PNG</div>
+        <div class="tb-dropdown-item" id="export-json-btn" role="menuitem">Export JSON</div>
+        <div class="tb-dropdown-sep" aria-hidden="true"></div>
+        <div class="tb-dropdown-item" id="import-json-btn" role="menuitem">Import JSON</div>
+      </div>
+    </div>
+
+    <!-- Edit dropdown -->
+    <div class="tb-dropdown-wrap">
+      <button class="tb-btn" id="edit-btn" aria-haspopup="true" aria-label="Edit menu">Edit ▾</button>
+      <div class="tb-dropdown" id="edit-dropdown" role="menu">
+        <div class="tb-dropdown-item" id="undo-btn"    role="menuitem">Undo  <span class="tb-shortcut-hint">Ctrl+Z</span></div>
+        <div class="tb-dropdown-item" id="add-dot-btn" role="menuitem">Add Dot Node  <span class="tb-shortcut-hint">.</span></div>
+        <div class="tb-dropdown-item danger" id="clear-btn" role="menuitem">Clear All</div>
+      </div>
+    </div>
+
+    <div class="tb-sep" aria-hidden="true"></div>
+
+    <!-- Help -->
+    <button class="tb-btn" id="help-btn" title="Keyboard shortcuts (?)" aria-label="Show help">?</button>
+
+    <!-- Gear / Preferences dropdown -->
+    <div class="tb-dropdown-wrap">
+      <button class="tb-btn" id="gear-btn" title="Preferences" aria-label="Preferences">⚙</button>
+      <div class="tb-dropdown" id="gear-dropdown" role="menu">
+        <div class="tb-dropdown-item" id="focus-ring-btn"             role="menuitem">Focus Ring Colors</div>
+        <div class="tb-dropdown-item" id="kb-shortcuts-settings-btn"  role="menuitem">Keyboard Shortcuts</div>
+        <div class="tb-dropdown-item" id="font-settings-btn"          role="menuitem">Font Settings</div>
+        <div class="tb-dropdown-sep" aria-hidden="true"></div>
+        <div class="tb-toggle-row" role="menuitem">
+          Straight Lines
+          <label class="pref-toggle" aria-label="Toggle straight lines">
+            <input type="checkbox" id="gear-line-style-toggle">
+            <span class="pref-toggle-slider"></span>
+          </label>
+        </div>
+        <div class="tb-toggle-row" role="menuitem">
+          Show Hints
+          <label class="pref-toggle" aria-label="Toggle shortcuts hint overlay">
+            <input type="checkbox" id="gear-hints-toggle" checked>
+            <span class="pref-toggle-slider"></span>
+          </label>
+        </div>
+        <div class="tb-dropdown-sep" aria-hidden="true"></div>
+        <a class="tb-dropdown-item danger" href="/logout" role="menuitem">Log Out</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Main layout ───────────────────────────────── -->
+  <div id="main">
+    <div id="workspace" role="application" aria-label="Logic map canvas">
+      <div id="workspace-grid" aria-hidden="true"></div>
+
+      <!-- canvas-root: receives zoom/pan CSS transform (v04) -->
+      <div id="canvas-root">
+        <svg id="svg-lines" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <path d="M0,0 L8,3 L0,6 Z" fill="#4a4f6a"></path>
+            </marker>
+            <marker id="arrowhead-active" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <path d="M0,0 L8,3 L0,6 Z" fill="#a594ff"></path>
+            </marker>
+          </defs>
+
+          <!-- Snap guide lines (v04) -->
+          <line id="snap-guide-v" class="snap-guide"
+                x1="0" y1="-9999" x2="0" y2="9999" style="display:none"/>
+          <line id="snap-guide-h" class="snap-guide"
+                x1="-9999" y1="0" x2="9999" y2="0" style="display:none"/>
+        </svg>
+
+        <div id="bubbles-layer" aria-hidden="true"></div>
+      </div>
+
+      <!-- Shortcuts overlay (v4.1.2: transparent bg, larger text) -->
+      <div id="shortcuts-hint" aria-label="Keyboard shortcuts quick reference">
+        <span class="hint-key"><kbd>?</kbd> open help</span>
+        <span class="hint-key"><kbd>.</kbd> dot node</span>
+        <span class="hint-key"><kbd>S</kbd> connect / select</span>
+        <span class="hint-key"><kbd>Shift+S</kbd> toggle all lines</span>
+        <span class="hint-key"><kbd>C</kbd> bubble color</span>
+        <span class="hint-key"><kbd>F2</kbd> edit bubble</span>
+        <span class="hint-key"><kbd>Del</kbd> delete selected</span>
+        <span class="hint-key"><kbd>H</kbd> reset view</span>
+        <span class="hint-key"><kbd>I</kbd> toggle hints</span>
+        <span class="hint-key"><kbd>Wheel</kbd> zoom canvas</span>
+        <span class="hint-key"><kbd>Ctrl+S</kbd> save project</span>
+        <span class="hint-key"><kbd>Ctrl+Z</kbd> undo</span>
+        <span class="hint-key"><kbd>Space+Drag / MMB</kbd> pan canvas</span>
+      </div>
+    </div>
+
+    <div id="v-resizer" role="separator" aria-orientation="vertical"
+         aria-label="Resize workspace and text panel"></div>
+
+    <!-- ── Text panel ─────────────────────────────── -->
+    <div id="text-panel" role="complementary" aria-label="Source text panel">
+      <div id="text-display-wrap">
+        <div class="panel-header">
+          <span class="dot" aria-hidden="true"></span>
+          Source Text
+          <!-- v04: extract hint -->
+          <span class="hint">Select text + Enter to extract</span>
+        </div>
+        <div id="text-display" role="document"
+             aria-label="Source text — select to extract bubbles"
+             tabindex="0"></div>
+        <div id="sel-tooltip" role="button" tabindex="0"
+             aria-label="Extract selected text as bubble">Extract Bubble</div>
+      </div>
+
+      <div id="h-resizer" role="separator" aria-orientation="horizontal"
+           aria-label="Resize text sections"></div>
+
+      <div id="text-input-wrap">
+        <div class="panel-header">Input Text</div>
+        <label for="text-input" class="sr-only">Paste or type source text</label>
+        <textarea id="text-input"
+                  placeholder="Paste or type your source text here..."
+                  aria-label="Input text area"></textarea>
+        <div id="submit-row">
+          <button id="submit-btn" aria-label="Submit text to reading panel">Submit Text</button>
+          <div id="submit-hint" aria-hidden="true">Load text into the reading panel</div>
+          <label id="append-toggle">
+            <input type="checkbox" id="append-mode" aria-label="Append mode">
+            Append
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Context menu (v04: removed Connect From Here, added Toggle Straight) ── -->
+  <div id="ctx-menu" role="menu" aria-label="Node actions">
+    <div class="ctx-item" id="ctx-edit"          role="menuitem">Edit</div>
+    <div class="ctx-item" id="ctx-dot-on"        role="menuitem">Add Dot On Line</div>
+    <div class="ctx-item" id="ctx-dot-below"     role="menuitem">Add Dot Below</div>
+    <div class="ctx-item" id="ctx-set-color"     role="menuitem" style="display:none">Set Color</div>
+    <div class="ctx-item" id="ctx-toggle-straight" role="menuitem" style="display:none">Toggle Straight / Curve</div>
+    <div class="ctx-sep" aria-hidden="true"></div>
+    <div class="ctx-item danger" id="ctx-delete" role="menuitem">Delete</div>
+  </div>
+
+  <!-- ── Fill Color panel (v4.1.2: opacity slider) ─────────── -->
+  <div id="color-panel" role="dialog" aria-label="Fill color" aria-modal="true">
+    <div id="color-panel-header">
+      <span>Fill Color</span>
+      <button id="color-panel-close" aria-label="Close color panel">×</button>
+    </div>
+    <div id="color-panel-body">
+      <input type="color" id="color-panel-picker" value="#7c6af7" aria-label="Custom color">
+      <div id="color-panel-opacity-row">
+        <span>Opacity</span>
+        <input type="range" id="color-panel-opacity" min="5" max="100" value="25" aria-label="Color opacity">
+        <span id="color-panel-opacity-label">25%</span>
+      </div>
+      <div id="color-panel-swatches">
+        <button class="color-swatch" data-color="#7c6af7" style="background:#7c6af7" title="Violet"></button>
+        <button class="color-swatch" data-color="#a594ff" style="background:#a594ff" title="Lavender"></button>
+        <button class="color-swatch" data-color="#4ade80" style="background:#4ade80" title="Green"></button>
+        <button class="color-swatch" data-color="#f87171" style="background:#f87171" title="Red"></button>
+        <button class="color-swatch" data-color="#fbbf24" style="background:#fbbf24" title="Amber"></button>
+        <button class="color-swatch" data-color="#38bdf8" style="background:#38bdf8" title="Sky blue"></button>
+        <button class="color-swatch" data-color="#fb923c" style="background:#fb923c" title="Orange"></button>
+        <button class="color-swatch color-swatch-clear" data-color="" title="Clear">✕</button>
+      </div>
+    </div>
+    <div id="color-panel-footer">
+      <button id="color-panel-apply">Apply</button>
+      <button id="color-panel-clear">Clear</button>
+    </div>
+  </div>
+
+  <!-- ── Help modal (v4.1.2: H key, bubble merge, CSS classes) ── -->
+  <div id="help-modal" role="dialog" aria-modal="true" aria-label="Help">
+    <div id="help-modal-content">
+      <div id="help-modal-header">
+        <span>Help</span>
+        <button id="help-modal-close" aria-label="Close help">×</button>
+      </div>
+      <div id="help-modal-body">
+
+        <p class="modal-section-label">How to use</p>
+        <table class="help-table-section">
+          <tr><td class="help-td-action">1. Submit text</td><td>Type or paste text in the Input area, click Submit.</td></tr>
+          <tr><td class="help-td-action">2. Extract bubbles</td><td>Select any phrase in Source Text, press Enter or click the tooltip.</td></tr>
+          <tr><td class="help-td-action">3. Connect</td><td>Press S to enter Connect mode. Click a bubble to start, click another to draw an arrow.</td></tr>
+          <tr><td class="help-td-action">4. Merge bubbles</td><td>Drag one bubble onto another — when they overlap, release to merge their text.</td></tr>
+          <tr><td class="help-td-action">5. Save / Export</td><td>Ctrl+S to save. File → Export PNG or Export JSON to download.</td></tr>
+          <tr><td class="help-td-action">Import format</td><td>JSON must contain title, source_text, and graph_data fields.</td></tr>
+        </table>
+
+        <p class="modal-section-label">Keyboard shortcuts</p>
+        <table>
+          <tr><td><kbd>S</kbd></td><td>Toggle Connect / Select mode</td></tr>
+          <tr><td><kbd>C</kbd></td><td>Open Fill Color panel (bubble selected)</td></tr>
+          <tr><td><kbd>Shift+S</kbd></td><td>Toggle ALL lines straight / curve</td></tr>
+          <tr><td><kbd>.</kbd></td><td>Insert dot node</td></tr>
+          <tr><td><kbd>Del / Backspace</kbd></td><td>Delete selected node</td></tr>
+          <tr><td><kbd>F2</kbd></td><td>Edit selected bubble</td></tr>
+          <tr><td><kbd>Enter</kbd></td><td>Extract text / Edit bubble</td></tr>
+          <tr><td><kbd>Ctrl+S</kbd></td><td>Save project</td></tr>
+          <tr><td><kbd>Ctrl+Z</kbd></td><td>Undo</td></tr>
+          <tr><td><kbd>H</kbd></td><td>Reset view (zoom 1× + pan to origin)</td></tr>
+          <tr><td><kbd>I</kbd></td><td>Toggle shortcuts hint visibility</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>Cancel / close panels</td></tr>
+          <tr><td><kbd>?</kbd></td><td>Toggle this help</td></tr>
+          <tr><td><kbd>Wheel</kbd></td><td>Zoom in / out</td></tr>
+          <tr><td><kbd>Space + drag</kbd></td><td>Pan canvas</td></tr>
+          <tr><td><kbd>Middle + drag</kbd></td><td>Pan canvas</td></tr>
+        </table>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Font Settings panel (v4.1.5: stepper for both sizes, title-left header, Cancel|Save order) ── -->
+  <div id="prefs-panel" role="dialog" aria-modal="true" aria-label="Font Settings">
+    <div id="prefs-panel-content">
+      <div id="prefs-panel-header">
+        <span>Font Settings</span>
+        <button id="prefs-reset-btn" class="prefs-header-reset" aria-label="Reset font settings to defaults">Reset</button>
+        <button id="prefs-panel-close" aria-label="Close font settings">×</button>
+      </div>
+      <div id="prefs-panel-body">
+
+        <section>
+          <h3>Typography</h3>
+          <label>
+            Font family
+            <select id="pref-font-family" aria-label="Editor font family">
+              <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+              <option value="'Syne', sans-serif">Syne</option>
+              <option value="system-ui, sans-serif">System UI</option>
+              <option value="Arial, sans-serif">Arial</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="'Courier New', monospace">Courier New</option>
+              <option value="'Segoe UI', sans-serif">Segoe UI</option>
+            </select>
+          </label>
+          <div class="prefs-row">
+            <span>Text panel font size</span>
+            <div class="stepper-wrap">
+              <div class="bubble-font-stepper">
+                <button class="bubble-font-btn" id="pref-text-font-dec" aria-label="Decrease text font size">−</button>
+                <input type="number" id="pref-text-font-size" value="13" min="10" max="24" aria-label="Text panel font size">
+                <span class="stepper-unit">px</span>
+                <button class="bubble-font-btn" id="pref-text-font-inc" aria-label="Increase text font size">+</button>
+              </div>
+            </div>
+          </div>
+          <div class="prefs-row">
+            <span>Bubble font size</span>
+            <div class="stepper-wrap">
+              <div class="bubble-font-stepper">
+                <button class="bubble-font-btn" id="pref-bubble-font-dec" aria-label="Decrease bubble font size">−</button>
+                <input type="number" id="pref-bubble-font-display" value="12" min="8" max="20" aria-label="Bubble font size">
+                <span class="stepper-unit">px</span>
+                <button class="bubble-font-btn" id="pref-bubble-font-inc" aria-label="Increase bubble font size">+</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+      <div id="prefs-panel-footer">
+        <button id="prefs-cancel-btn">Cancel</button>
+        <button id="prefs-save-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Focus Ring Colors modal (v4.1.5: title-left header, Cancel+Save footer) ── -->
+  <div id="focus-ring-modal" role="dialog" aria-modal="true" aria-label="Focus Ring Colors">
+    <div id="focus-ring-modal-content">
+      <div id="focus-ring-modal-header">
+        <span>Focus Ring Colors</span>
+        <button id="focus-ring-reset-btn" class="prefs-header-reset" aria-label="Reset focus ring colors to defaults">Reset</button>
+        <button id="focus-ring-modal-close" aria-label="Close focus ring color modal">×</button>
+      </div>
+      <div id="focus-ring-modal-body">
+        <label>
+          Selection Mode Focus Color
+          <input type="color" id="pref-select-focus-ring-color" value="#7c6af7" aria-label="Selection mode focus ring color">
+        </label>
+        <label>
+          Connection Mode Focus Color
+          <input type="color" id="pref-connect-focus-ring-color" value="#c2e2ff" aria-label="Connection mode focus ring color">
+        </label>
+      </div>
+      <div id="focus-ring-modal-footer">
+        <button id="focus-ring-cancel-btn">Cancel</button>
+        <button id="focus-ring-save-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Keyboard Shortcuts modal (v4.1.2: editable configurable rows) ── -->
+  <div id="kb-modal" role="dialog" aria-modal="true" aria-label="Keyboard Shortcuts">
+    <div id="kb-modal-content">
+      <div id="kb-modal-header">
+        <span>Keyboard Shortcuts</span>
+        <button id="kb-modal-close" aria-label="Close keyboard shortcuts modal">×</button>
+      </div>
+      <div id="kb-modal-body">
+        <!-- All shortcut rows injected by prefs.js -->
+      </div>
+      <div id="kb-modal-footer">
+        <button id="kb-modal-reset">Reset Configurable to Defaults</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Toast ───────────────────────────────────── -->
+  <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!--
+    html2canvas for PNG export.
+    Loaded as a regular (non-module) script so it is available globally.
+  -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
+          crossorigin="anonymous"></script>
+
+  <!--
+    XSS fix: graph_data parsed to dict in app.py, serialised via | tojson.
+    This inline script MUST run before main.js (deferred module).
+  -->
+  <script>
+    window.INITIAL_PROJECT = {% if project_data %}
+      {
+        id:          {{ project_data.id }},
+        title:       {{ project_data.title | tojson }},
+        source_text: {{ project_data.source_text | default('', true) | tojson }},
+        graph_data:  {{ project_data.graph_data | tojson }}
+      }
+    {% else %}
+      null
+    {% endif %};
+  </script>
+
+  <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+</body>
+</html>

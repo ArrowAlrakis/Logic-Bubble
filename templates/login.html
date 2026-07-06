@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{#
+  Jinja2 macro import — input_field renders a dark-themed label + input pair.
+  See templates/macros.html for full macro documentation.
+#}
+{% from "macros.html" import input_field %}
+
+{% block title %}Login — Logic Bubble App{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+  <div class="bg-lb-surface border border-lb-border rounded-2xl p-8">
+
+    <h1 class="text-2xl font-bold mb-1">Login</h1>
+    <p class="text-sm text-lb-text-muted mb-6">
+      Welcome back — sign in to access your projects.
+    </p>
+
+    <form method="POST" action="{{ url_for('login') }}" novalidate>
+
+      {# Username or Email field (v4.1.1: accepts both) #}
+      <div class="mb-4">
+        <label for="identifier"
+               class="block text-sm font-semibold text-lb-text-muted mb-1.5">
+          Username or Email
+        </label>
+        <input id="identifier" name="identifier" type="text" required
+               placeholder="Username or Email"
+               class="w-full px-3 py-2.5 rounded-lg
+                      bg-lb-input-bg border border-lb-border
+                      text-lb-text placeholder-lb-text-muted text-sm
+                      focus:outline-none focus:border-lb-accent focus:ring-1 focus:ring-lb-accent
+                      transition">
+      </div>
+      {{ input_field("Password", "password", "password", "••••••••") }}
+
+      <button type="submit"
+              class="w-full bg-lb-accent text-white py-2.5 rounded-lg
+                     font-semibold text-sm hover:bg-lb-accent2 transition mt-2">
+        Login
+      </button>
+    </form>
+
+    <p class="text-sm text-lb-text-muted text-center mt-5">
+      Don't have an account?
+      <a href="/register" class="text-lb-accent hover:text-lb-accent2 font-semibold transition">
+        Register
+      </a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

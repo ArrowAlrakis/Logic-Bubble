@@ -1,0 +1,79 @@
+{#
+  macros.html — Jinja2 Reusable UI Macros
+  ========================================
+  Usage in any template:
+      {% from "macros.html" import input_field, project_card %}
+
+  Macros defined here:
+    • input_field  — dark-themed labeled <input> for forms (Tailwind)
+    • project_card — dashboard project row with Open + AJAX Delete (v04: × symbol)
+#}
+
+
+{# ---------------------------------------------------------------
+   input_field
+   --------------------------------------------------------------- #}
+{% macro input_field(label, name, type="text", placeholder="", required=true) %}
+<div class="mb-4">
+  <label for="{{ name }}"
+         class="block text-sm font-semibold text-lb-text-muted mb-1.5">
+    {{ label }}
+  </label>
+  <input
+    id="{{ name }}"
+    name="{{ name }}"
+    type="{{ type }}"
+    placeholder="{{ placeholder }}"
+    {% if required %}required{% endif %}
+    class="w-full px-3 py-2.5 rounded-lg
+           bg-lb-input-bg border border-lb-border
+           text-lb-text placeholder-lb-text-muted text-sm
+           focus:outline-none focus:border-lb-accent focus:ring-1 focus:ring-lb-accent
+           transition"
+  >
+</div>
+{% endmacro %}
+
+
+{# ---------------------------------------------------------------
+   project_card
+   v04: Delete button changed to × symbol, uses AJAX fetch.
+        Wrapped in .project-card-wrapper so AJAX can remove it.
+   --------------------------------------------------------------- #}
+{% macro project_card(project, open_url, delete_url) %}
+<div class="project-card-wrapper">
+  <div class="flex items-center justify-between
+              bg-lb-surface2 border border-lb-border rounded-xl
+              px-5 py-4 hover:border-lb-accent transition group">
+
+    <div class="min-w-0 flex-1 mr-4">
+      <p class="font-semibold text-lb-text group-hover:text-lb-accent2
+                transition truncate">
+        {{ project.title }}
+      </p>
+      <p class="text-xs text-lb-text-muted mt-0.5">
+        Last updated: {{ project.updated_at }}
+      </p>
+    </div>
+
+    <div class="flex items-center gap-4 flex-shrink-0">
+      <a href="{{ open_url }}"
+         class="text-sm font-semibold text-lb-accent hover:text-lb-accent2 transition">
+        Open →
+      </a>
+
+      {# v04: × button with AJAX delete (no full page reload) #}
+      <button type="button"
+              class="delete-project-btn text-lg font-bold leading-none
+                     text-lb-text-muted hover:text-lb-red transition
+                     w-6 h-6 flex items-center justify-center rounded"
+              data-project-id="{{ project.id }}"
+              data-project-title="{{ project.title | e }}"
+              data-delete-url="{{ delete_url }}"
+              aria-label="Delete project {{ project.title | e }}">
+        ×
+      </button>
+    </div>
+  </div>
+</div>
+{% endmacro %}

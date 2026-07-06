@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{#
+  Jinja2 macro import — input_field renders a dark-themed label + input pair.
+  See templates/macros.html for full macro documentation.
+#}
+{% from "macros.html" import input_field %}
+
+{% block title %}Register — Logic Bubble App{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+  <div class="bg-lb-surface border border-lb-border rounded-2xl p-8">
+
+    <h1 class="text-2xl font-bold mb-1">Create Account</h1>
+    <p class="text-sm text-lb-text-muted mb-6">
+      Sign up to save and manage your logic-map projects.
+    </p>
+
+    <form method="POST" action="{{ url_for('register') }}" novalidate>
+
+      {# input_field macro: (label, name, type, placeholder) #}
+      {{ input_field("Username", "username", "text", "Choose a username") }}
+      {{ input_field("Email", "email", "email", "you@example.com") }}
+      {{ input_field("Password", "password", "password", "Create a password") }}
+
+      <button type="submit"
+              class="w-full bg-lb-accent text-white py-2.5 rounded-lg
+                     font-semibold text-sm hover:bg-lb-accent2 transition mt-2">
+        Create Account
+      </button>
+    </form>
+
+    <p class="text-sm text-lb-text-muted text-center mt-5">
+      Already have an account?
+      <a href="/login" class="text-lb-accent hover:text-lb-accent2 font-semibold transition">
+        Login
+      </a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}
