@@ -1,0 +1,79 @@
+/*
+  theme.css — Logic Bubble App Design Tokens
+  ===========================================
+  Single source of truth for the shared colour palette.
+  These CSS custom properties are used by:
+    • Tailwind (via tailwind.config in base.html — values mapped as var(--lb-*))
+    • Any plain CSS that needs the same tokens
+  The Editor's style.css defines its own superset of these tokens;
+  this file covers the tokens needed by non-editor pages only.
+*/
+
+:root {
+  /* Background layers */
+  --lb-bg:       #0e0f14;   /* page background          (editor: --bg)      */
+  --lb-surface:  #16181f;   /* card / nav surface       (editor: --surface)  */
+  --lb-surface2: #1e2028;   /* raised element surface   (editor: --surface2) */
+
+  /* Borders */
+  --lb-border:   #2a2d38;   /* default border colour    (editor: --border)   */
+
+  /* Accent colours */
+  --lb-accent:   #7c6af7;   /* primary violet accent    (editor: --accent)   */
+  --lb-accent2:  #a594ff;   /* lighter violet / hover   (editor: --accent2)  */
+
+  /* Semantic feedback colours */
+  --lb-green:    #4ade80;   /* success                  (editor: --green)    */
+  --lb-red:      #f87171;   /* error                    (editor: --red)      */
+
+  /* Text */
+  --lb-text:     #eef1f7;   /* primary text                                  */
+  --lb-text-muted: #8b92b0; /* secondary / placeholder text                  */
+  --lb-text-nav: #c7cffd;   /* nav link colour                               */
+
+  /* Typography */
+  --lb-font: 'Syne', system-ui, sans-serif;   /* matches editor font         */
+
+  /* Form inputs */
+  --lb-input-bg:     #10131a;   /* form field background                      */
+
+  /* Auth button border */
+  --lb-btn-border:   rgba(199, 207, 253, 0.3);  /* login/register border      */
+}
+
+/* ── Site-wide toast overlay (v4.1.2: moved up, wider) ──── */
+#site-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  padding: 12px 40px;
+  min-width: 500px;
+  text-align: center;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--lb-font);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.25s, transform 0.25s;
+  pointer-events: none;
+  line-height: 1.4;
+}
+
+#site-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+#site-toast.success {
+  background: #1f5133;
+  color: var(--lb-green);
+  border: 1px solid #2e7a4c;
+}
+
+#site-toast.error {
+  background: #5a2222;
+  color: var(--lb-red);
+  border: 1px solid #8a3434;
+}

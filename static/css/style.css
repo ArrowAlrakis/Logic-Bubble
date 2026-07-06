@@ -1,0 +1,1597 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+:root {
+    --bg: #0e0f14;
+    --surface: #16181f;
+    --surface2: #1e2028;
+    --border: #2a2d38;
+    --border2: #363a48;
+    --accent: #7c6af7;
+    --accent2: #a594ff;
+    --accent-glow: rgba(124, 106, 247, 0.25);
+    --green: #4ade80;
+    --red: #f87171;
+    --text: #e8eaf0;
+    --text2: #8b8fa8;
+    --text3: #555870;
+    --line-color: #4a4f6a;
+    --line-hover: #7c6af7;
+    --line-active: #a594ff;
+
+    /* Focus ring — independent from --accent, set by prefs.js */
+    --focus-ring:      #7c6af7;
+    --focus-ring-glow: rgba(124, 106, 247, 0.25);
+
+    /* Connect mode focus ring — set by prefs.js */
+    --connect-focus-ring:      #c2e2ff;
+    --connect-focus-ring-glow: rgba(194, 226, 255, 0.25);
+
+    /* Editor font — set by prefs.js */
+    --editor-font: 'JetBrains Mono', monospace;
+
+    /* Bubble font size — set by prefs.js */
+    --bubble-font-size: 12px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+}
+
+/* ── Topbar ── */
+#topbar {
+    height: 44px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 10px;
+    flex-shrink: 0;
+    z-index: 100;
+    position: relative;
+}
+
+.logo {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--accent2);
+    text-transform: uppercase;
+}
+
+.logo span {
+    color: var(--text3);
+}
+
+.tb-sep {
+    width: 1px;
+    height: 20px;
+    background: var(--border2);
+    margin: 0 2px;
+}
+
+.tb-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.tb-btn:hover {
+    background: var(--surface2);
+    color: var(--text);
+}
+
+.tb-btn:active {
+    transform: scale(0.96);
+}
+
+.tb-btn.danger:hover {
+    border-color: var(--red);
+    color: var(--red);
+}
+
+/* ── Shortcuts overlay (canvas bottom-left, v4.1.2: transparent bg) ── */
+#shortcuts-hint {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    z-index: 10;
+    background: transparent;
+    padding: 8px 10px;
+    pointer-events: none;
+}
+
+.hint-key {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.hint-key kbd {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+}
+
+/* ── Main layout ── */
+#main {
+    display: flex;
+    height: calc(100vh - 44px);
+}
+
+/* ── Workspace ── */
+#workspace {
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+    flex-shrink: 0;
+    width: 62%;
+    cursor: default;
+}
+
+#workspace-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.28;
+    pointer-events: none;
+}
+
+#bubbles-layer {
+    position: absolute;
+    inset: 0;
+}
+
+svg#svg-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    z-index: 4;
+    /* above bubbles-layer so hit areas receive clicks */
+    pointer-events: none;
+    /* SVG itself doesn't block clicks… */
+}
+
+/* …only the interactive elements inside SVG do */
+svg#svg-lines .logic-line-hit,
+svg#svg-lines .arrow-handle {
+    pointer-events: all;
+}
+
+#bubbles-layer {
+    z-index: 3;
+}
+
+/* ── V resizer ── */
+#v-resizer {
+    width: 5px;
+    background: var(--border);
+    cursor: col-resize;
+    flex-shrink: 0;
+    transition: background 0.15s;
+    z-index: 10;
+    position: relative;
+}
+
+#v-resizer::after {
+    content: '';
+    position: absolute;
+    inset: 0 -5px;
+}
+
+#v-resizer:hover,
+#v-resizer.dragging {
+    background: var(--accent);
+}
+
+/* ── Text panel ── */
+#text-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    min-width: 240px;
+    overflow: hidden;
+}
+
+#text-display-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 80px;
+    overflow: hidden;
+}
+
+.panel-header {
+    padding: 9px 14px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.panel-header .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+.panel-header .hint {
+    margin-left: auto;
+    font-size: 9px;
+    color: var(--text3);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+#text-display {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 16px;
+    font-family: var(--editor-font, 'JetBrains Mono', monospace);
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+    cursor: text;
+    user-select: text;
+}
+
+#text-display:empty::before {
+    content: 'Submit text below to begin.\ASelect words to extract logic bubbles.';
+    white-space: pre;
+    color: var(--text3);
+    font-style: italic;
+    font-size: 12px;
+}
+
+#text-display::selection,
+#text-display *::selection {
+    background: rgba(124, 106, 247, 0.35);
+}
+
+/* ── Selection tooltip ── */
+#sel-tooltip {
+    position: fixed;
+    display: none;
+    z-index: 9999;
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 5px 12px;
+    gap: 6px;
+    align-items: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--accent-glow);
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--accent2);
+    font-family: 'JetBrains Mono', monospace;
+    animation: pop-in 0.12s ease;
+    pointer-events: all;
+}
+
+#sel-tooltip.visible {
+    display: flex;
+}
+
+#sel-tooltip:hover {
+    background: var(--accent);
+    color: #fff;
+}
+
+/* ── H resizer ── */
+#h-resizer {
+    height: 5px;
+    background: var(--border);
+    cursor: row-resize;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+
+#h-resizer:hover,
+#h-resizer.dragging {
+    background: var(--accent);
+}
+
+/* ── Input area ── */
+#text-input-wrap {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    min-height: 90px;
+}
+
+#text-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+    caret-color: var(--accent2);
+    min-height: 80px;
+}
+
+#text-input::placeholder {
+    color: var(--text3);
+}
+
+#submit-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+#submit-btn {
+    padding: 6px 16px;
+    background: var(--accent);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+#submit-btn:hover {
+    background: var(--accent2);
+    transform: translateY(-1px);
+}
+
+#submit-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+}
+
+#append-toggle {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    cursor: pointer;
+}
+
+#append-toggle input {
+    cursor: pointer;
+    accent-color: var(--accent);
+}
+
+/* ── Bubbles ── */
+.bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 2px solid var(--border2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    overflow: hidden;
+    will-change: transform;
+    z-index: 3;
+}
+
+.bubble:active {
+    cursor: grabbing;
+}
+
+.bubble.selected {
+    border-color: var(--focus-ring);
+    box-shadow: 0 0 0 3px var(--focus-ring-glow), 0 0 20px var(--focus-ring-glow);
+}
+
+.bubble.merge-target {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.3);
+}
+
+.bubble.connect-source {
+    border-color: var(--connect-focus-ring);
+    box-shadow: 0 0 0 3px var(--connect-focus-ring-glow);
+    animation: pulse-source 1s ease infinite;
+}
+
+@keyframes pulse-source {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 3px var(--connect-focus-ring-glow);
+    }
+
+    50% {
+        box-shadow: 0 0 0 6px rgba(194, 226, 255, 0.12);
+    }
+}
+
+.bubble-text {
+    font-family: var(--editor-font, 'JetBrains Mono', monospace);
+    font-size: var(--bubble-font-size, 12px);
+    line-height: 1.5;
+    color: var(--text);
+    text-align: center;
+    padding: 18px;
+    pointer-events: none;
+    word-break: break-word;
+}
+
+.bubble-id {
+    position: absolute;
+    bottom: 7px;
+    right: 9px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    color: var(--text3);
+    pointer-events: none;
+}
+
+.bubble-edit-ta {
+    font-family: var(--editor-font, 'JetBrains Mono', monospace);
+    font-size: var(--bubble-font-size, 12px);
+    line-height: 1.5;
+    color: var(--text);
+    text-align: center;
+    padding: 14px;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    caret-color: var(--accent2);
+}
+
+/* ── Dot nodes ── */
+.dot-node {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 2px solid var(--border2);
+    cursor: grab;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    z-index: 4;
+    transform: translate(-50%, -50%);
+}
+
+.dot-node:hover {
+    border-color: var(--accent);
+    transform: translate(-50%, -50%) scale(1.2);
+}
+
+.dot-node.selected {
+    border-color: var(--focus-ring);
+    box-shadow: 0 0 0 3px var(--focus-ring-glow);
+    transform: translate(-50%, -50%) scale(1.15);
+}
+
+.dot-node.connect-source {
+    border-color: var(--connect-focus-ring);
+    animation: pulse-source 1s ease infinite;
+}
+
+/* ── SVG lines ── */
+.logic-line {
+    stroke: var(--line-color);
+    stroke-width: 2;
+    fill: none;
+    pointer-events: none;
+    transition: stroke 0.15s, stroke-width 0.15s;
+}
+
+.logic-line.hovered {
+    stroke: var(--line-hover);
+    stroke-width: 2.5;
+}
+
+.logic-line.selected {
+    stroke: var(--line-active);
+    stroke-width: 2.5;
+}
+
+.logic-line-hit {
+    stroke: transparent;
+    stroke-width: 18;
+    fill: none;
+    cursor: pointer;
+}
+
+/* arrow handle — draggable endpoint */
+.arrow-handle {
+    fill: var(--line-color);
+    cursor: grab;
+    transition: fill 0.15s, r 0.1s;
+}
+
+.arrow-handle:hover {
+    fill: var(--line-hover);
+}
+
+.logic-line.selected~.arrow-handle,
+.arrow-handle.selected {
+    fill: var(--line-active);
+}
+
+/* ── Context menu ── */
+#ctx-menu {
+    position: fixed;
+    z-index: 9999;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 4px;
+    min-width: 158px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    display: none;
+}
+
+#ctx-menu.visible {
+    display: block;
+    animation: pop-in 0.1s ease;
+}
+
+.ctx-item {
+    padding: 7px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text2);
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.1s;
+}
+
+.ctx-item:hover {
+    background: var(--surface);
+    color: var(--text);
+}
+
+.ctx-item.danger:hover {
+    background: rgba(248, 113, 113, 0.1);
+    color: var(--red);
+}
+
+.ctx-sep {
+    height: 1px;
+    background: var(--border);
+    margin: 3px 4px;
+}
+
+/* ── Toast (v4.1.2: moved up, wider) ── */
+#toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 10px 40px;
+    min-width: 440px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text2);
+    z-index: 9999;
+    transition: transform 0.25s ease, opacity 0.25s;
+    opacity: 0;
+    pointer-events: none;
+}
+
+#toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+/* ── Animations ── */
+@keyframes pop-in {
+    from {
+        transform: scale(0.85) translateY(4px);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border2);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text3);
+}
+
+.nav-link {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Accessibility ── */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ══════════════════════════════════════
+   v04 additions
+   ══════════════════════════════════════ */
+
+/* ── canvas-root (zoom/pan wrapper) ── */
+#canvas-root {
+    position: absolute;
+    inset: 0;
+    transform-origin: 0 0;
+    will-change: transform;
+}
+
+/* ── Topbar dropdowns ── */
+.tb-dropdown-wrap {
+    position: relative;
+}
+
+.tb-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 170px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 4px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    display: none;
+    flex-direction: column;
+    z-index: 9990;
+}
+
+.tb-dropdown.open {
+    display: flex;
+    animation: pop-in 0.1s ease;
+}
+
+/* Gear dropdown: right-align to avoid viewport overflow */
+#gear-dropdown {
+    left: auto;
+    right: 0;
+}
+
+.tb-dropdown-item {
+    padding: 7px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text2);
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.1s;
+}
+
+.tb-dropdown-item:hover {
+    background: var(--surface);
+    color: var(--text);
+}
+
+.tb-dropdown-item.danger:hover {
+    background: rgba(248, 113, 113, 0.1);
+    color: var(--red);
+}
+
+/* ── Mode indicator ── */
+#mode-indicator {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--text3);
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    cursor: default;
+    user-select: none;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+#mode-indicator.connect-active {
+    color: var(--accent2);
+    border-color: var(--accent);
+    background: rgba(124, 106, 247, 0.08);
+}
+
+/* ── From-end handle ── */
+.arrow-handle-from {
+    fill: var(--border2);
+    cursor: grab;
+    transition: fill 0.15s;
+    opacity: 0;
+}
+
+.arrow-handle-from:hover {
+    fill: var(--accent);
+    opacity: 1;
+}
+
+svg#svg-lines:hover .arrow-handle-from {
+    opacity: 0.6;
+}
+
+/* ── Snap guide lines (v4.1.1: reduced opacity) ── */
+.snap-guide {
+    stroke: var(--accent);
+    stroke-width: 1;
+    stroke-dasharray: 4, 3;
+    opacity: 0.28;
+    pointer-events: none;
+}
+
+/* ── Fill Color panel ── */
+#color-panel {
+    position: fixed;
+    z-index: 9998;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 0;
+    min-width: 180px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    animation: pop-in 0.1s ease;
+}
+
+#color-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    border-bottom: 1px solid var(--border);
+}
+
+#color-panel-header button {
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0 2px;
+    transition: color 0.15s;
+}
+
+#color-panel-header button:hover { color: var(--text); }
+
+#color-panel-body {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#color-panel-picker {
+    width: 100%;
+    height: 36px;
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    background: var(--surface);
+    cursor: pointer;
+    padding: 2px;
+}
+
+#color-panel-swatches {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.color-swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.12s, border-color 0.12s;
+    flex-shrink: 0;
+}
+
+.color-swatch:hover {
+    transform: scale(1.2);
+    border-color: white;
+}
+
+#color-panel-footer {
+    display: flex;
+    gap: 6px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--border);
+}
+
+#color-panel-footer button {
+    flex: 1;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+#color-panel-apply { border-color: var(--accent) !important; color: var(--accent) !important; }
+#color-panel-apply:hover { background: var(--accent) !important; color: white !important; }
+#color-panel-footer button:hover { background: var(--surface); color: var(--text); }
+
+/* ── Help modal ── */
+#help-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+#help-modal-content {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    min-width: 320px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+    animation: pop-in 0.15s ease;
+    overflow: hidden;
+}
+
+#help-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+}
+
+#help-modal-header button {
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+    transition: color 0.15s;
+}
+
+#help-modal-header button:hover { color: var(--text); }
+
+#help-modal-body {
+    padding: 12px 16px;
+    overflow-y: auto;
+    max-height: 60vh;
+}
+
+#help-modal-body table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#help-modal-body tr {
+    border-bottom: 1px solid var(--border);
+}
+
+#help-modal-body tr:last-child { border-bottom: none; }
+
+#help-modal-body td {
+    padding: 6px 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text2);
+    vertical-align: middle;
+}
+
+#help-modal-body td:first-child {
+    width: 40%;
+    white-space: nowrap;
+}
+
+#help-modal-body kbd {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--accent2);
+}
+
+/* ── Preferences panel ── */
+#prefs-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+#prefs-panel-content {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    min-width: 340px;
+    max-width: 460px;
+    width: 90%;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+    animation: pop-in 0.15s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#prefs-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+}
+
+#prefs-panel-header button {
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1;
+    padding: 3;
+    transition: color 0.15s;
+}
+
+#prefs-panel-close { margin-left: auto; }
+#prefs-panel-header button:hover { color: var(--text); }
+
+#prefs-panel-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+    max-height: 60vh;
+}
+
+#prefs-panel-body section h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 8px;
+}
+
+#prefs-panel-body label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text2);
+    margin-bottom: 6px;
+}
+
+#prefs-panel-body input[type="number"] {
+    width: 46px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 2px 4px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-align: center;
+    -moz-appearance: textfield;
+}
+
+#prefs-panel-body input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+#prefs-panel-body input[type="number"]::-webkit-outer-spin-button,
+#prefs-panel-body input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}
+
+/* ── Bubble font stepper ── */
+.bubble-font-stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.bubble-font-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1.5px solid var(--accent);
+    background: none;
+    color: var(--accent);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, color 0.12s;
+    user-select: none;
+}
+.bubble-font-btn:hover {
+    background: var(--accent);
+    color: #fff;
+}
+#pref-bubble-font-display {
+    width: 40px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 2px 4px;
+    -moz-appearance: textfield;
+}
+#pref-bubble-font-display:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+#pref-bubble-font-display::-webkit-outer-spin-button,
+#pref-bubble-font-display::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+/* ── Stepper unit label (px) ── */
+.stepper-unit {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+}
+
+/* ── Prefs row (replaces label for stepper rows to avoid hover bleed) ── */
+.prefs-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text2);
+    margin-bottom: 6px;
+}
+
+/* Stepper wrap: button + input + unit px */
+.stepper-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#prefs-panel-footer {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+}
+
+#prefs-panel-footer button {
+    flex: 1;
+    padding: 7px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+#prefs-save-btn { border-color: var(--accent) !important; color: var(--accent) !important; }
+#prefs-save-btn:hover { background: var(--accent) !important; color: white !important; }
+#prefs-panel-footer button:hover { background: var(--surface); color: var(--text); }
+
+/* ══════════════════════════════════════
+   v4.1.1 additions
+   ══════════════════════════════════════ */
+
+/* ── Logo nav dropdown button ── */
+.tb-logo-btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--accent2);
+    text-transform: uppercase;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 4px;
+    transition: color 0.15s;
+    white-space: nowrap;
+}
+.tb-logo-btn:hover { color: var(--text); }
+.tb-logo-btn span { color: var(--text3); }
+
+/* ── Topbar flex spacer (pushes right-side items to edge) ── */
+.tb-spacer { flex: 1; }
+
+/* ── Topbar project title input ── */
+.tb-title-input {
+    width: 180px;
+    padding: 6px 10px;
+    border-radius: 7px;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+}
+.tb-title-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* ── Dropdown separator line ── */
+.tb-dropdown-sep {
+    height: 1px;
+    background: var(--border);
+    margin: 3px 4px;
+}
+
+/* Allow <a> tags inside tb-dropdown to look like items */
+a.tb-dropdown-item {
+    text-decoration: none;
+    display: block;
+}
+
+/* ── Focus Ring Color modal ── */
+#focus-ring-modal,
+#kb-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+#focus-ring-modal-content,
+#kb-modal-content {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    min-width: 300px;
+    max-width: 440px;
+    width: 90%;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+    animation: pop-in 0.15s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#focus-ring-modal-header,
+#kb-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+}
+#focus-ring-modal-header button,
+#kb-modal-header button {
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1;
+    padding: 3;
+    transition: color 0.15s;
+}
+#focus-ring-modal-close,
+#kb-modal-close { margin-left: auto; }
+#focus-ring-modal-header button:hover,
+#kb-modal-header button:hover { color: var(--text); }
+
+#focus-ring-modal-body,
+#kb-modal-body {
+    padding: 16px;
+    overflow-y: auto;
+    max-height: 60vh;
+}
+
+#focus-ring-modal-body label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text2);
+}
+
+#focus-ring-modal-footer,
+#kb-modal-footer {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+}
+
+#focus-ring-modal-footer button,
+#kb-modal-footer button {
+    flex: 1;
+    padding: 7px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+#focus-ring-modal-footer button:hover,
+#kb-modal-footer button:hover { background: var(--surface); color: var(--text); }
+
+#focus-ring-save-btn  { border-color: var(--accent) !important; color: var(--accent) !important; }
+#focus-ring-save-btn:hover  { background: var(--accent) !important; color: white !important; }
+#focus-ring-cancel-btn:hover { background: var(--surface) !important; color: var(--text) !important; }
+
+/* KB modal table */
+#kb-modal-body table { width: 100%; border-collapse: collapse; }
+#kb-modal-body tr { border-bottom: 1px solid var(--border); }
+#kb-modal-body tr:last-child { border-bottom: none; }
+#kb-modal-body td {
+    padding: 6px 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text2);
+    vertical-align: middle;
+}
+#kb-modal-body td:first-child { width: 65%; }
+#kb-modal-body kbd {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--accent2);
+}
+/* ══════════════════════════════════════
+   v4.1.2 additions
+   ══════════════════════════════════════ */
+
+/* ── Logo dropdown — no gap, padding for visual spacing ── */
+#logo-dropdown {
+    top: 100%;
+    padding-top: 8px;
+}
+
+#logo-dropdown .tb-dropdown-item {
+    font-size: 13px;
+}
+
+/* ── Color panel opacity slider ── */
+#color-panel-opacity-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+}
+#color-panel-opacity {
+    flex: 1;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+#color-panel-opacity-label {
+    min-width: 32px;
+    text-align: right;
+    color: var(--text2);
+}
+
+/* ── Color swatch: clear/reset button ── */
+.color-swatch-clear {
+    background: transparent !important;
+    border: 2px dashed #555 !important;
+    color: #555;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Help modal section label ── */
+.modal-section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 6px;
+}
+
+/* ── Help modal "how to use" action column ── */
+.help-td-action {
+    width: 36%;
+    color: var(--accent2);
+}
+
+/* ── Help modal "how to use" table bottom margin ── */
+.help-table-section {
+    margin-bottom: 14px;
+}
+
+/* ── Dropdown shortcut hint span ── */
+.tb-shortcut-hint {
+    opacity: 0.45;
+    font-size: 9px;
+    margin-left: auto;
+    padding-left: 8px;
+}
+
+/* ── KB modal: configurable rows ── */
+.kb-row-configurable {
+    cursor: pointer;
+    transition: background 0.1s;
+}
+.kb-row-configurable:hover {
+    background: rgba(124, 106, 247, 0.08);
+}
+.kb-row-configurable.kb-capturing {
+    background: rgba(194, 226, 255, 0.08);
+}
+.kb-capturing-hint {
+    color: #c2e2ff !important;
+    border-color: #c2e2ff !important;
+    animation: pulse-source 1s ease infinite;
+}
+/* Fixed (non-remappable) shortcut rows */
+.kb-row-fixed td:first-child {
+    color: var(--text3);
+}
+.kb-row-fixed kbd {
+    opacity: 0.55;
+}
+
+/* ── Prefs panel: toggle switch ── */
+.pref-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text2);
+    margin-bottom: 6px;
+}
+.pref-toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+}
+.pref-toggle input { opacity: 0; width: 0; height: 0; }
+.pref-toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border2);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.pref-toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    left: 3px;
+    top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+.pref-toggle input:checked + .pref-toggle-slider { background: var(--accent); }
+.pref-toggle input:checked + .pref-toggle-slider::before { transform: translateX(16px); }
+
+/* ── Prefs panel: select input ── */
+#prefs-panel-body select {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 5px;
+    padding: 4px 8px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+}
+#prefs-panel-body select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* ── SVG icon block display helper ── */
+.icon-block { display: block; }
+
+/* ══════════════════════════════════════
+   v4.1.3 additions
+   ══════════════════════════════════════ */
+
+/* ── Bubble spring animation (ripple-like multi-oscillation on font size change) ── */
+@keyframes bubble-spring {
+    0%   { transform: scale(1);     }
+    8%   { transform: scale(1.08);  }  /* first overshoot */
+    18%  { transform: scale(0.96);  }  /* first undershoot */
+    30%  { transform: scale(1.05);  }  /* second overshoot */
+    42%  { transform: scale(0.982); }  /* second undershoot */
+    54%  { transform: scale(1.025); }  /* third overshoot */
+    65%  { transform: scale(0.992); }  /* third undershoot */
+    76%  { transform: scale(1.01);  }  /* small overshoot */
+    87%  { transform: scale(0.997); }  /* tiny undershoot */
+    100% { transform: scale(1);     }  /* stable */
+}
+
+.bubble-spring {
+    animation: bubble-spring 1.6s ease-out;
+}
+
+/* ── Gear dropdown: inline toggle rows ── */
+.tb-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text2);
+    border-radius: 5px;
+    white-space: nowrap;
+    cursor: default;
+    user-select: none;
+}
+
+.tb-toggle-row:hover {
+    background: var(--surface);
+    color: var(--text);
+}
+
+/* ── Prefs panel header reset button (sits immediately right of title) ── */
+.prefs-header-reset {
+    background: none;
+    border: 1px solid var(--border2) !important;
+    border-radius: 4px;
+    color: var(--text3);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 2px 7px;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.prefs-header-reset:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
